@@ -1,0 +1,52 @@
+name: tesla-dashcam-ui
+version: "0.1.0"
+summary: Tesla Dashcam Kivy UI
+description: |
+  On-device Kivy dashboard for Tesla Dashcam AI running on Raspberry Pi 5.
+
+grade: devel
+confinement: devmode
+base: core24
+
+architectures:
+  - build-on: [amd64, arm64]
+    run-on: [arm64]
+
+apps:
+  dashcam-ui:
+    command: bin/dashcam-ui
+    plugs:
+      - opengl
+      - wayland
+      - x11
+      - network
+      - network-bind
+    environment:
+      KIVY_WINDOW: sdl2
+      KIVY_GL_BACKEND: gl
+      SDL_VIDEODRIVER: kmsdrm
+      LD_LIBRARY_PATH: >-
+        $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib:$SNAP/lib
+
+parts:
+  app:
+    plugin: python
+    source: ../
+    source-type: local
+    python-requirements: requirements.txt
+    stage-packages:
+      - libgl1-mesa-dri
+      - libgles2-mesa
+      - libgbm1
+      - libdrm2
+      - libsdl2-2.0-0
+      - libwayland-egl1
+      - libmtdev1
+    override-build: |
+      craftctl default
+      cat <<'EOF' > "$SNAPCRAFT_PART_INSTALL/bin/dashcam-ui"
+      #!/bin/bash
+      export LD_LIBRARY_PATH="$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib:$SNAP/lib:$LD_LIBRARY_PATH"
+      exec "$SNAP/usr/bin/python3" "$SNAP/main.py"
+      EOF
+      chmod +x "$SNAPCRAFT_PART_INSTALL/bin/dashcam-ui"

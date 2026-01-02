@@ -22,8 +22,13 @@ After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=${APP_DIR}/pi
-ExecStart=/usr/bin/python3 ${APP_DIR}/pi/main.py
+WorkingDirectory=${APP_DIR}
+ExecStart=${APP_DIR}/.venv/bin/python ${APP_DIR}/main.py
+Environment=PATH=${APP_DIR}/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=LD_LIBRARY_PATH=/snap/mesa-2404/current/usr/lib/aarch64-linux-gnu:/snap/mesa-core22/current/usr/lib/aarch64-linux-gnu
+Environment=LIBGL_DRIVERS_PATH=/snap/mesa-2404/current/usr/lib/aarch64-linux-gnu/dri
+Environment=KIVY_WINDOW=sdl2
+Environment=KIVY_GL_BACKEND=gl
 Restart=on-failure
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
