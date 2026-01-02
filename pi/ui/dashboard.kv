@@ -1,0 +1,265 @@
+#:kivy 2.3.0
+#:import Factory kivy.factory.Factory
+
+<DashcamApp>:
+
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        
+        # Header
+        StatusBar:
+            id: status_bar
+            size_hint_y: None
+            height: '40dp'
+        
+        # Main content
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: '10dp'
+            spacing: '10dp'
+            
+            # Left panel - Stats
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: 0.35
+                spacing: '10dp'
+                
+                StatCard:
+                    id: speed_card
+                    title: 'Speed'
+                    value: '0 km/h'
+                    icon: 'speedometer'
+                
+                StatCard:
+                    id: session_stats_card
+                    title: 'Session Stats'
+                
+                StatCard:
+                    id: pipeline_card
+                    title: 'Pipeline Status'
+            
+            # Right panel - Detections
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: 0.65
+                
+                Label:
+                    text: 'Recent Detections'
+                    size_hint_y: None
+                    height: '30dp'
+                    bold: True
+                
+                ScrollView:
+                    DetectionList:
+                        id: detection_list
+                
+                Button:
+                    text: 'View All →'
+                    size_hint_y: None
+                    height: '40dp'
+                    on_release: app.root.current = 'detections'
+        
+        # Action bar
+        ActionBar:
+            size_hint_y: None
+            height: '60dp'
+
+<StatusBar>:
+    canvas.before:
+        Color:
+            rgba: 0.15, 0.15, 0.15, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    BoxLayout:
+        padding: '5dp'
+        spacing: '15dp'
+        
+        StatusBadge:
+            id: rec_badge
+            icon: 'record-circle'
+            text: '00:00:00'
+        
+        StatusBadge:
+            id: lte_badge
+            icon: 'signal-cellular-3'
+            text: 'LTE'
+        
+        StatusBadge:
+            id: gps_badge
+            icon: 'map-marker'
+            text: 'GPS'
+        
+        Widget:
+        
+        Label:
+            id: time_label
+            text: '14:32 AEST'
+            font_size: '16sp'
+        
+        Label:
+            id: date_label
+            text: '02 Jan 2026'
+            font_size: '14sp'
+
+<ActionBar>:
+    canvas.before:
+        Color:
+            rgba: 0.12, 0.12, 0.12, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    BoxLayout:
+        padding: '10dp'
+        spacing: '15dp'
+        
+        ActionButton:
+            text: '📷 Clip'
+            on_release: app.capture_clip()
+        
+        ActionButton:
+            text: '📋 History'
+            on_release: app.root.current = 'detections'
+        
+        ActionButton:
+            text: '👤 Faces'
+            on_release: app.root.current = 'face_manage'
+        
+        ActionButton:
+            text: '⚙️ Settings'
+            on_release: app.root.current = 'settings'
+
+<DetectionCard>:
+    size_hint_y: None
+    height: '60dp'
+    canvas.before:
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [5]
+    
+    BoxLayout:
+        padding: '8dp'
+        spacing: '5dp'
+        
+        Label:
+            text: root.timestamp
+            size_hint_x: 0.15
+            font_size: '11sp'
+        
+        Label:
+            text: root.plate
+            size_hint_x: 0.18
+            font_size: '14sp'
+            bold: True
+        
+        Label:
+            text: root.vehicle_info
+            size_hint_x: 0.35
+            font_size: '12sp'
+        
+        Label:
+            text: root.colour
+            size_hint_x: 0.15
+        
+        StatusIcon:
+            icon: root.status_icon
+            color: root.status_color
+            size_hint_x: 0.17
+
+<FaceEnrollScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '10dp'
+        
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: '40dp'
+            
+            Button:
+                text: '← Back'
+                size_hint_x: None
+                width: '80dp'
+                on_release: app.root.current = 'face_manage'
+            
+            Label:
+                text: 'Enroll New Face'
+                font_size: '18sp'
+                bold: True
+        
+        # Step indicator
+        BoxLayout:
+            size_hint_y: None
+            height: '30dp'
+            
+            StepIndicator:
+                id: step_indicator
+                current_step: root.current_step
+                total_steps: 3
+        
+        # Content area - changes based on step
+        BoxLayout:
+            id: content_area
+            
+            # Step 1: Details (shown by default)
+            BoxLayout:
+                id: step1
+                orientation: 'vertical'
+                spacing: '15dp'
+                padding: '20dp'
+                
+                BoxLayout:
+                    size_hint_y: None
+                    height: '50dp'
+                    spacing: '10dp'
+                    
+                    Label:
+                        text: 'Name:'
+                        size_hint_x: 0.2
+                    
+                    TextInput:
+                        id: name_input
+                        multiline: False
+                        font_size: '16sp'
+                
+                BoxLayout:
+                    size_hint_y: None
+                    height: '50dp'
+                    spacing: '10dp'
+                    
+                    Label:
+                        text: 'Role:'
+                        size_hint_x: 0.2
+                    
+                    Spinner:
+                        id: role_spinner
+                        text: 'Driver'
+                        values: ['Driver', 'Passenger', 'Blocked']
+                
+                BoxLayout:
+                    size_hint_y: None
+                    height: '50dp'
+                    spacing: '10dp'
+                    
+                    Label:
+                        text: 'Notes:'
+                        size_hint_x: 0.2
+                    
+                    TextInput:
+                        id: notes_input
+                        multiline: False
+                
+                Widget:
+                
+                Button:
+                    text: 'Next →'
+                    size_hint: None, None
+                    size: '120dp', '50dp'
+                    pos_hint: {'right': 1}
+                    on_release: root.next_step()

@@ -1,0 +1,52 @@
+name = "tesla-dashcam-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dashcam-db"
+database_id = "YOUR_D1_ID"
+
+[[r2_buckets]]
+binding = "FOOTAGE"
+bucket_name = "dashcam-footage"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_KV_ID"
+
+[[queues.producers]]
+binding = "NOTIFICATION_QUEUE"
+queue = "notifications"
+
+[[queues.producers]]
+binding = "VIDEO_QUEUE"
+queue = "video-processing"
+
+[[queues.consumers]]
+queue = "notifications"
+max_batch_size = 10
+
+[[queues.consumers]]
+queue = "video-processing"
+max_batch_size = 1
+
+[durable_objects]
+bindings = [
+  { name = "DASHBOARD", class_name = "DashboardDO" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["DashboardDO"]
+
+[[vectorize]]
+binding = "FACE_INDEX"
+index_name = "face-embeddings"
+
+[[vectorize]]
+binding = "SCENE_INDEX"
+index_name = "scene-descriptions"

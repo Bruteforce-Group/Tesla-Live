@@ -1,0 +1,17 @@
+# Default configuration for Tesla Dashcam AI (Pi)
+# Values are overridden by environment variables (see core/config.py)
+vehicle_id: tesla-001
+device_id: pi-001
+api_base_url: https://tesla-dashcam-api.workers.dev
+api_key: ""
+nevdis_api_url: https://api.motorweb.com.au/v1
+nevdis_api_key: ""
+camera_resolution: [1920, 1080]
+camera_fps: 30
+detection_fps: 10
+plate_confidence_threshold: 0.7
+face_confidence_threshold: 0.8
+face_match_threshold: 0.6
+upload_on_wifi_only: false
+upload_priority_sentry: true
+display_resolution: [800, 480]
