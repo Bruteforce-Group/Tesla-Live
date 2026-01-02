@@ -1,3 +1,3 @@
-export async function sendNotification(queue: Queue, payload: any) {
+export async function sendNotification(queue: Queue, payload: Record<string, unknown>) {
   await queue.send(payload);
 }

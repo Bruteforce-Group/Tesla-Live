@@ -4,20 +4,20 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager
 
-from core.config import settings
 from core.camera import CameraManager
+from core.config import settings
 from core.detector import HailoDetector
-from core.plate_ocr import PlateOCR
 from core.face_recognition import FaceRecognitionPipeline
 from core.gps import GPSManager
+from core.plate_ocr import PlateOCR
 from services.alert_service import AlertService
 from services.rego_service import RegoService
 from services.upload_service import UploadService
-from ui.screens.main_screen import MainScreen
-from ui.screens.detections_screen import DetectionsScreen
 from ui.screens.alerts_screen import AlertsScreen
+from ui.screens.detections_screen import DetectionsScreen
 from ui.screens.face_enroll_screen import FaceEnrollScreen
 from ui.screens.face_manage_screen import FaceManageScreen
+from ui.screens.main_screen import MainScreen
 from ui.screens.settings_screen import SettingsScreen
 
 
@@ -74,7 +74,7 @@ class DashcamApp(App):
         self.camera.stop()
         self.gps.stop()
 
-    def process_frame(self, dt):
+    def process_frame(self, _dt):
         """Main processing loop - runs at detection_fps."""
         frame = self.camera.get_frame()
         if frame is None:
@@ -127,13 +127,15 @@ class DashcamApp(App):
             # Fire and forget
             import asyncio
 
-            asyncio.create_task(self.alert_service.send_face_sighting(payload))
+            self._last_alert_task = asyncio.create_task(
+                self.alert_service.send_face_sighting(payload)
+            )
 
     def _crop_detection(self, frame, bbox):
         x1, y1, x2, y2 = map(int, [bbox.x1, bbox.y1, bbox.x2, bbox.y2])
         return frame[y1:y2, x1:x2]
 
-    def update_ui(self, dt):
+    def update_ui(self, _dt):
         """Update dashboard UI."""
         main_screen = self.root.get_screen("main")
         main_screen.update_stats(
@@ -148,7 +150,7 @@ class DashcamApp(App):
             recording=self.is_recording,
         )
 
-    def sync_to_cloud(self, dt):
+    def sync_to_cloud(self, _dt):
         """Background cloud sync."""
         self.upload_service.process_queue()
         self.rego_service.process_queue()

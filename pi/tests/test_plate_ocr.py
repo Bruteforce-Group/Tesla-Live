@@ -1,7 +1,7 @@
 import numpy as np
 
-from core.plate_ocr import PlateOCR
 from core.config import settings
+from core.plate_ocr import PlateOCR
 
 
 def test_plate_ocr_handles_empty():

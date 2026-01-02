@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Deque, Dict, Any
+from typing import Any
 
 import aiohttp
 
@@ -9,7 +9,7 @@ class RegoService:
 
     def __init__(self, config):
         self.config = config
-        self.queue: Deque[Dict[str, Any]] = deque()
+        self.queue: deque[dict[str, Any]] = deque()
 
     def queue_lookup(self, sighting: dict):
         self.queue.append(sighting)
@@ -30,8 +30,9 @@ class RegoService:
         async def _send():
             url = f"{self.config.api_base_url}/api/plates"
             headers = {"X-API-Key": self.config.api_key}
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=sighting, headers=headers) as resp:
-                    return await resp.json()
+            async with aiohttp.ClientSession() as session, session.post(
+                url, json=sighting, headers=headers
+            ) as resp:
+                return await resp.json()
 
         return asyncio.get_event_loop().run_until_complete(_send())

@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import ClassVar
 
 import cv2
 import numpy as np
@@ -18,13 +18,13 @@ except ImportError:
 class PlateResult:
     text: str
     confidence: float
-    state: Optional[str] = None  # Detected Australian state
+    state: str | None = None  # Detected Australian state
 
 
 class PlateOCR:
     """On-device license plate OCR using LPRNet on Hailo."""
 
-    AU_PLATE_PATTERNS = {
+    AU_PLATE_PATTERNS: ClassVar[dict[str, str]] = {
         "QLD": r"^[0-9]{3}[A-Z]{3}$|^[A-Z]{3}[0-9]{3}$",
         "NSW": r"^[A-Z]{2}[0-9]{2}[A-Z]{2}$|^[A-Z]{3}[0-9]{2}[A-Z]$",
         "VIC": r"^[A-Z]{3}[0-9]{3}$|^[0-9]{3}[A-Z]{3}$",
@@ -35,7 +35,7 @@ class PlateOCR:
         "ACT": r"^[A-Z]{3}[0-9]{2}[A-Z]$|^Y[A-Z]{2}[0-9]{2}[A-Z]$",
     }
 
-    CHAR_SET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    CHAR_SET: ClassVar[str] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     def __init__(self, config):
         self.config = config
@@ -48,7 +48,7 @@ class PlateOCR:
         if model_path.exists() and HAILO_AVAILABLE:
             self.lprnet_hef = HEF(str(model_path))
 
-    def recognize(self, plate_crop: np.ndarray) -> Optional[PlateResult]:
+    def recognize(self, plate_crop: np.ndarray) -> PlateResult | None:
         """Recognize text from plate crop."""
         if plate_crop is None or plate_crop.size == 0:
             return None
@@ -71,10 +71,7 @@ class PlateOCR:
     def _preprocess(self, plate_crop: np.ndarray) -> np.ndarray:
         """Preprocess plate image for LPRNet."""
         resized = cv2.resize(plate_crop, (94, 24))
-        if len(resized.shape) == 3:
-            gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = resized
+        gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY) if len(resized.shape) == 3 else resized
         normalized = gray.astype(np.float32) / 255.0
         return np.expand_dims(np.expand_dims(normalized, 0), 0)
 
@@ -92,7 +89,7 @@ class PlateOCR:
         _ = corrections
         return cleaned
 
-    def _detect_state(self, text: str) -> Optional[str]:
+    def _detect_state(self, text: str) -> str | None:
         """Detect Australian state from plate format."""
         for state, pattern in self.AU_PLATE_PATTERNS.items():
             if re.match(pattern, text):

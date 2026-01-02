@@ -50,25 +50,26 @@ export class NEVDISClient {
     }
   }
 
-  private mapBrokerResponse(data: any): NEVDISVehicle {
+  private mapBrokerResponse(data: unknown): NEVDISVehicle {
+    const body = data as Record<string, unknown>;
     return {
-      plate: data.registration_number || data.plate,
-      state: data.jurisdiction || data.state,
-      rego_status: data.registration_status || data.status,
-      rego_expiry: data.registration_expiry || data.expiry,
-      make: data.make,
-      model: data.model,
-      year: parseInt(data.year_of_manufacture || data.year),
-      colour: data.colour || data.color,
-      body_type: data.body_type,
-      vin: data.vin,
-      engine_number: data.engine_number,
-      stolen: data.stolen_flag === true || data.stolen === 'Y',
-      stolen_jurisdiction: data.stolen_jurisdiction,
-      stolen_date: data.stolen_date,
-      wovr_status: data.wovr_status || 'NOT_LISTED',
-      wovr_type: data.wovr_type,
-      ppsr_encumbered: data.ppsr_encumbered === true || data.ppsr === 'Y',
+      plate: (body.registration_number as string) || (body.plate as string),
+      state: (body.jurisdiction as string) || (body.state as string),
+      rego_status: (body.registration_status as string) || (body.status as string),
+      rego_expiry: (body.registration_expiry as string) || (body.expiry as string),
+      make: body.make as string,
+      model: body.model as string,
+      year: Number.parseInt((body.year_of_manufacture as string) || (body.year as string), 10),
+      colour: (body.colour as string) || (body.color as string),
+      body_type: body.body_type as string,
+      vin: body.vin as string,
+      engine_number: body.engine_number as string,
+      stolen: body.stolen_flag === true || body.stolen === 'Y',
+      stolen_jurisdiction: body.stolen_jurisdiction as string,
+      stolen_date: body.stolen_date as string,
+      wovr_status: (body.wovr_status as string) || 'NOT_LISTED',
+      wovr_type: body.wovr_type as string,
+      ppsr_encumbered: body.ppsr_encumbered === true || body.ppsr === 'Y',
     };
   }
 }

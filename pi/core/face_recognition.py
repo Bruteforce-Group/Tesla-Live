@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 
@@ -29,7 +28,7 @@ class FaceResult:
     confidence: float
     landmarks: np.ndarray
     embedding: np.ndarray
-    match: Optional[FaceMatch] = None
+    match: FaceMatch | None = None
 
 
 class FaceRecognitionPipeline:
@@ -59,11 +58,14 @@ class FaceRecognitionPipeline:
         """Load enrolled faces from local storage."""
         faces_dir = self.config.enrolled_faces_path
         if not faces_dir.exists():
-            faces_dir.mkdir(parents=True, exist_ok=True)
-            return
+            try:
+                faces_dir.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                # In restricted environments (e.g., read-only test FS), skip loading
+                return
 
         for face_file in faces_dir.glob("*.json"):
-            with open(face_file) as f:
+            with face_file.open() as f:
                 data = json.load(f)
                 self.enrolled_faces[data["face_id"]] = {
                     "name": data["name"],
@@ -89,7 +91,7 @@ class FaceRecognitionPipeline:
         # TODO: align, preprocess and run ArcFace inference
         return np.zeros(512)
 
-    def find_match(self, embedding: np.ndarray) -> Optional[FaceMatch]:
+    def find_match(self, embedding: np.ndarray) -> FaceMatch | None:
         """Find matching enrolled face."""
         if not self.enrolled_faces:
             return None
@@ -141,7 +143,7 @@ class FaceRecognitionPipeline:
         }
 
         face_path = self.config.enrolled_faces_path / f"{face_id}.json"
-        with open(face_path, "w") as f:
+        with face_path.open("w") as f:
             json.dump(face_data, f)
 
         self.enrolled_faces[face_id] = {

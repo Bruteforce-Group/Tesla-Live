@@ -1,7 +1,7 @@
 import numpy as np
 
-from core.face_recognition import FaceRecognitionPipeline
 from core.config import settings
+from core.face_recognition import FaceRecognitionPipeline
 
 
 def test_face_pipeline_no_faces():

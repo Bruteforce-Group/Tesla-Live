@@ -1,15 +1,14 @@
-from dataclasses import dataclass
-from typing import Optional
 import threading
 import time
+from dataclasses import dataclass
 
 
 @dataclass
 class GPSData:
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    speed_kmh: Optional[float] = None
-    heading: Optional[float] = None
+    latitude: float | None = None
+    longitude: float | None = None
+    speed_kmh: float | None = None
+    heading: float | None = None
 
 
 class GPSManager:
@@ -42,5 +41,5 @@ class GPSManager:
             # Keep placeholder values; integrate actual GPSD later
             self.has_fix = False
 
-    def get_current(self) -> Optional[GPSData]:
+    def get_current(self) -> GPSData | None:
         return self._current

@@ -11,6 +11,7 @@ class AlertService:
         """Send face sighting to API."""
         url = f"{self.config.api_base_url}/api/faces"
         headers = {"X-API-Key": self.config.api_key}
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, headers=headers) as resp:
-                return await resp.json()
+        async with aiohttp.ClientSession() as session, session.post(
+            url, json=payload, headers=headers
+        ) as resp:
+            return await resp.json()

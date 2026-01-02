@@ -78,7 +78,7 @@ export class DashboardDO {
         }
 
         ws.send(message);
-      } catch (e) {
+      } catch (_e) {
         this.sessions.delete(ws);
       }
     }

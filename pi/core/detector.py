@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import ClassVar
 
-import numpy as np
 import cv2
+import numpy as np
 
 # Hailo imports - these will be available when HailoRT is installed
 try:
     from hailo_platform import (
         HEF,
-        VDevice,
         InferVStreams,
+        VDevice,
     )
 
     HAILO_AVAILABLE = True
@@ -49,19 +49,19 @@ class Detection:
 
 @dataclass
 class PlateDetection(Detection):
-    plate_crop: Optional[np.ndarray] = None
+    plate_crop: np.ndarray | None = None
 
 
 @dataclass
 class FaceDetection(Detection):
-    landmarks: Optional[np.ndarray] = None
-    embedding: Optional[np.ndarray] = None
+    landmarks: np.ndarray | None = None
+    embedding: np.ndarray | None = None
 
 
 class HailoDetector:
     """Hailo-8L inference wrapper for object detection."""
 
-    YOLO_CLASSES = [
+    YOLO_CLASSES: ClassVar[list[str]] = [
         "person",
         "bicycle",
         "car",
@@ -78,8 +78,8 @@ class HailoDetector:
         "bench",
     ]
 
-    VEHICLE_CLASSES = {"car", "truck", "bus", "motorcycle"}
-    ALERT_CLASSES = {
+    VEHICLE_CLASSES: ClassVar[set[str]] = {"car", "truck", "bus", "motorcycle"}
+    ALERT_CLASSES: ClassVar[set[str]] = {
         "person",
         "bicycle",
         "car",
@@ -156,12 +156,12 @@ class HailoDetector:
         batched = np.expand_dims(transposed, 0)
         return batched
 
-    def _postprocess_yolo(self, outputs: dict, original_shape: tuple) -> list[Detection]:
+    def _postprocess_yolo(self, _outputs: dict, _original_shape: tuple) -> list[Detection]:
         """Postprocess YOLOv8 outputs to detections."""
         # TODO: implement decoding + NMS when Hailo outputs are available
         return []
 
-    def _detect_plate_in_vehicle(self, frame: np.ndarray, vehicle_bbox: BBox) -> Optional[np.ndarray]:
+    def _detect_plate_in_vehicle(self, frame: np.ndarray, vehicle_bbox: BBox) -> np.ndarray | None:
         """Detect and crop license plate within vehicle bounding box."""
         if self.plate_hef is None:
             return None

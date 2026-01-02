@@ -1,4 +1,4 @@
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import ListProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 
 

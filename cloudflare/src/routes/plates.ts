@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Bindings } from '../index';
+import type { Bindings } from '../index';
 import { NEVDISClient } from '../services/nevdis';
 import { checkWatchlists } from '../services/watchlist';
 
@@ -16,16 +16,18 @@ interface PlateSighting {
   trip_id?: string;
 }
 
-app.post('/', async (c) => {
-  const sighting: PlateSighting = await c.req.json();
-  const sightingId = crypto.randomUUID();
+type VehicleData = Awaited<ReturnType<NEVDISClient['lookupPlate']>>;
+type WatchlistHit = Awaited<ReturnType<typeof checkWatchlists>>;
 
-  const nevdis = new NEVDISClient(c.env.NEVDIS_API_URL, c.env.NEVDIS_API_KEY);
-  const vehicleData = await nevdis.lookupPlate(sighting.plate_number, sighting.plate_state);
-
-  const watchlistHit = await checkWatchlists(c.env.DB, sighting.plate_number, vehicleData);
-
-  await c.env.DB.prepare(
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: inserts many bound parameters
+async function saveSighting(
+  env: Bindings,
+  sighting: PlateSighting,
+  sightingId: string,
+  vehicleData: VehicleData,
+  watchlistHit: WatchlistHit,
+) {
+  await env.DB.prepare(
     `
     INSERT INTO plate_sightings (
       sighting_id, vehicle_id, trip_id, plate_number, plate_state,
@@ -36,7 +38,7 @@ app.post('/', async (c) => {
       wovr_status, wovr_type, ppsr_encumbered,
       watchlist_hit, watchlist_priority
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `
+  `,
   )
     .bind(
       sightingId,
@@ -62,66 +64,107 @@ app.post('/', async (c) => {
       vehicleData?.wovr_type || null,
       vehicleData?.ppsr_encumbered || false,
       watchlistHit?.reason || null,
-      watchlistHit?.priority || null
+      watchlistHit?.priority || null,
     )
     .run();
+}
 
-  if (watchlistHit) {
-    await c.env.DB.prepare(
-      `
+async function recordWatchlistAlert(
+  env: Bindings,
+  sighting: PlateSighting,
+  watchlistHit: WatchlistHit,
+  vehicleData: VehicleData,
+) {
+  if (!watchlistHit) {
+    return;
+  }
+
+  await env.DB.prepare(
+    `
       INSERT INTO watchlist_alerts (
         alert_id, plate_number, alert_type, priority,
         vehicle_make, vehicle_model, vehicle_colour,
         gps_lat, gps_lng, timestamp, details
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `
+    `,
+  )
+    .bind(
+      crypto.randomUUID(),
+      sighting.plate_number,
+      watchlistHit.type,
+      watchlistHit.priority,
+      vehicleData?.make || null,
+      vehicleData?.model || null,
+      vehicleData?.colour || null,
+      sighting.gps_lat,
+      sighting.gps_lng,
+      sighting.timestamp,
+      JSON.stringify({ vehicleData, watchlistHit }),
     )
-      .bind(
-        crypto.randomUUID(),
-        sighting.plate_number,
-        watchlistHit.type,
-        watchlistHit.priority,
-        vehicleData?.make || null,
-        vehicleData?.model || null,
-        vehicleData?.colour || null,
-        sighting.gps_lat,
-        sighting.gps_lng,
-        sighting.timestamp,
-        JSON.stringify({ vehicleData, watchlistHit })
-      )
-      .run();
+    .run();
+}
 
-    const dashboardId = c.env.DASHBOARD.idFromName('fleet-dashboard');
-    const dashboard = c.env.DASHBOARD.get(dashboardId);
-    await dashboard.fetch(
-      new Request('https://internal/broadcast', {
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'watchlist_alert',
-          data: {
-            plate: sighting.plate_number,
-            alert_type: watchlistHit.type,
-            priority: watchlistHit.priority,
-            vehicle: vehicleData,
-            location: { lat: sighting.gps_lat, lng: sighting.gps_lng },
-            timestamp: sighting.timestamp,
-          },
-        }),
-      })
-    );
+async function broadcastWatchlistAlert(
+  env: Bindings,
+  sighting: PlateSighting,
+  watchlistHit: WatchlistHit,
+  vehicleData: VehicleData,
+) {
+  if (!watchlistHit) return;
 
-    if (watchlistHit.priority === 'critical' || watchlistHit.priority === 'high') {
-      await c.env.NOTIFICATION_QUEUE.send({
+  const dashboardId = env.DASHBOARD.idFromName('fleet-dashboard');
+  const dashboard = env.DASHBOARD.get(dashboardId);
+  await dashboard.fetch(
+    new Request('https://internal/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({
         type: 'watchlist_alert',
-        alert: {
+        data: {
           plate: sighting.plate_number,
           alert_type: watchlistHit.type,
           priority: watchlistHit.priority,
           vehicle: vehicleData,
+          location: { lat: sighting.gps_lat, lng: sighting.gps_lng },
+          timestamp: sighting.timestamp,
         },
-      });
-    }
+      }),
+    }),
+  );
+}
+
+async function notifyWatchlist(
+  env: Bindings,
+  sighting: PlateSighting,
+  watchlistHit: WatchlistHit,
+  vehicleData: VehicleData,
+) {
+  if (!watchlistHit) return;
+  if (watchlistHit.priority === 'critical' || watchlistHit.priority === 'high') {
+    await env.NOTIFICATION_QUEUE.send({
+      type: 'watchlist_alert',
+      alert: {
+        plate: sighting.plate_number,
+        alert_type: watchlistHit.type,
+        priority: watchlistHit.priority,
+        vehicle: vehicleData,
+      },
+    });
   }
+}
+
+app.post('/', async (c) => {
+  const sighting: PlateSighting = await c.req.json();
+  const sightingId = crypto.randomUUID();
+
+  const nevdis = new NEVDISClient(c.env.NEVDIS_API_URL, c.env.NEVDIS_API_KEY);
+  const vehicleData = await nevdis.lookupPlate(sighting.plate_number, sighting.plate_state);
+
+  const watchlistHit = await checkWatchlists(c.env.DB, sighting.plate_number, vehicleData);
+
+  await saveSighting(c.env, sighting, sightingId, vehicleData, watchlistHit);
+  await recordWatchlistAlert(c.env, sighting, watchlistHit, vehicleData);
+  await broadcastWatchlistAlert(c.env, sighting, watchlistHit, vehicleData);
+  await notifyWatchlist(c.env, sighting, watchlistHit, vehicleData);
 
   return c.json({
     success: true,
@@ -140,7 +183,7 @@ app.get('/:plate', async (c) => {
     WHERE plate_number = ? 
     ORDER BY timestamp DESC 
     LIMIT 100
-  `
+  `,
   )
     .bind(plate)
     .all();

@@ -1,5 +1,5 @@
-from core.detector import HailoDetector
 from core.config import settings
+from core.detector import HailoDetector
 
 
 def test_detector_mock():

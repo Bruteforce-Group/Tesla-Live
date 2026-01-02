@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Deque, Dict, Any
+from typing import Any
 
 
 class UploadService:
@@ -7,7 +7,7 @@ class UploadService:
 
     def __init__(self, config):
         self.config = config
-        self.queue: Deque[Dict[str, Any]] = deque()
+        self.queue: deque[dict[str, Any]] = deque()
         self.is_connected: bool = False
 
     def enqueue(self, item: dict):

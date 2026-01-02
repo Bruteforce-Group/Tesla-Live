@@ -2,13 +2,13 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
-import { alertsRoutes } from './routes/alerts';
-import { platesRoutes } from './routes/plates';
-import { facesRoutes } from './routes/faces';
-import { tripsRoutes } from './routes/trips';
-import { footageRoutes } from './routes/footage';
-import { searchRoutes } from './routes/search';
 import { DashboardDO } from './durable-objects/dashboard';
+import { alertsRoutes } from './routes/alerts';
+import { facesRoutes } from './routes/faces';
+import { footageRoutes } from './routes/footage';
+import { platesRoutes } from './routes/plates';
+import { searchRoutes } from './routes/search';
+import { tripsRoutes } from './routes/trips';
 
 export { DashboardDO };
 

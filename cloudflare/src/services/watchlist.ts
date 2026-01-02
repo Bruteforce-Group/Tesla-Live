@@ -1,16 +1,25 @@
+import type { NEVDISVehicle } from './nevdis';
+
+type Priority = 'critical' | 'high' | 'medium' | 'low';
+
 interface WatchlistHit {
   type: string;
   source: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  priority: Priority;
   reason: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export async function checkWatchlists(
   db: D1Database,
   plate: string,
-  vehicleData: any
+  vehicleData: NEVDISVehicle | Record<string, unknown> | null,
 ): Promise<WatchlistHit | null> {
+  const normalizePriority = (value: unknown): Priority => {
+    const allowed: Priority[] = ['critical', 'high', 'medium', 'low'];
+    return allowed.includes(value as Priority) ? (value as Priority) : 'medium';
+  };
+
   const customHit = await db
     .prepare(`
     SELECT reason, priority, notes FROM plate_watchlist WHERE plate_number = ?
@@ -22,7 +31,7 @@ export async function checkWatchlists(
     return {
       type: 'custom',
       source: 'custom_watchlist',
-      priority: (customHit.priority as any) || 'medium',
+      priority: normalizePriority(customHit.priority),
       reason: customHit.reason as string,
       details: { notes: customHit.notes },
     };

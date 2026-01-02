@@ -2,7 +2,6 @@ import threading
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -18,13 +17,13 @@ class Frame:
 class CameraManager:
     def __init__(self, config):
         self.config = config
-        self.cap: Optional[cv2.VideoCapture] = None
+        self.cap: cv2.VideoCapture | None = None
         self.frame_buffer: deque[Frame] = deque(maxlen=300)  # 10 seconds at 30fps
-        self.current_frame: Optional[Frame] = None
+        self.current_frame: Frame | None = None
         self.frame_count = 0
         self.running = False
         self._lock = threading.Lock()
-        self._capture_thread: Optional[threading.Thread] = None
+        self._capture_thread: threading.Thread | None = None
 
     def start(self):
         """Start camera capture in background thread."""
@@ -60,7 +59,7 @@ class CameraManager:
                     self.current_frame = frame_obj
                     self.frame_buffer.append(frame_obj)
 
-    def get_frame(self) -> Optional[Frame]:
+    def get_frame(self) -> Frame | None:
         """Get the current frame (thread-safe)."""
         with self._lock:
             return self.current_frame
