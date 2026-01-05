@@ -1,0 +1,31 @@
+name: Cursor Rules Sync
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ensure-cursor-rules-synced:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify cursor-rules is at origin/main
+        run: |
+          cd cursor-rules
+          git fetch origin main
+          local_ref="$(git rev-parse HEAD)"
+          remote_ref="$(git rev-parse origin/main)"
+
+          if [ "$local_ref" != "$remote_ref" ]; then
+            echo "cursor-rules submodule is not synced with origin/main"
+            echo "Local : $local_ref"
+            echo "Remote: $remote_ref"
+            exit 1
+          fi
+
+          echo "cursor-rules submodule is synced with origin/main"
