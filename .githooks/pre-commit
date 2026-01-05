@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SUBMODULE="cursor-rules"
+
+if [ ! -d "$SUBMODULE" ]; then
+  # Nothing to sync if submodule is missing (e.g., tarball checkout)
+  exit 0
+fi
+
+echo "Syncing ${SUBMODULE} submodule to remote..."
+if ! git submodule update --remote "$SUBMODULE"; then
+  echo "Failed to sync ${SUBMODULE}. Check your network or access and try again." >&2
+  exit 1
+fi
+
+# Stage any pointer update so the commit includes the synced revision.
+git add "$SUBMODULE"
