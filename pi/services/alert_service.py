@@ -15,3 +15,12 @@ class AlertService:
             url, json=payload, headers=headers
         ) as resp:
             return await resp.json()
+
+    async def send_audio_event(self, payload: dict):
+        """Send audio event to API."""
+        url = f"{self.config.api_base_url}/api/alerts"
+        headers = {"X-API-Key": self.config.api_key}
+        async with aiohttp.ClientSession() as session, session.post(
+            url, json=payload, headers=headers
+        ) as resp:
+            return await resp.json()

@@ -23,6 +23,15 @@ CREATE TABLE IF NOT EXISTS events (
     vehicle_id TEXT NOT NULL,
     event_type TEXT NOT NULL,
     severity TEXT,
+    object_type TEXT,
+    bbox_x REAL,
+    bbox_y REAL,
+    bbox_width REAL,
+    bbox_height REAL,
+    attributes TEXT, -- JSON string of attributes (vehicle colour/type, clothing, species)
+    audio_label TEXT,
+    audio_confidence REAL,
+    embedding_vector_id TEXT,
     timestamp DATETIME NOT NULL,
     gps_lat REAL,
     gps_lng REAL,
@@ -36,6 +45,7 @@ CREATE TABLE IF NOT EXISTS events (
 
 CREATE INDEX idx_events_trip ON events(trip_id, timestamp);
 CREATE INDEX idx_events_type ON events(event_type, timestamp);
+CREATE INDEX idx_events_audio ON events(audio_label, timestamp) WHERE audio_label IS NOT NULL;
 
 -- Plate sightings
 CREATE TABLE IF NOT EXISTS plate_sightings (
@@ -108,6 +118,23 @@ CREATE TABLE IF NOT EXISTS face_sightings (
 );
 
 CREATE INDEX idx_faces_matched ON face_sightings(matched_face_id) WHERE matched_face_id IS NOT NULL;
+
+-- Audio events (edge-captured)
+CREATE TABLE IF NOT EXISTS audio_events (
+    event_id TEXT PRIMARY KEY,
+    trip_id TEXT REFERENCES trips(trip_id),
+    vehicle_id TEXT NOT NULL,
+    label TEXT NOT NULL,
+    confidence REAL,
+    rms REAL,
+    timestamp DATETIME NOT NULL,
+    gps_lat REAL,
+    gps_lng REAL,
+    linked_event_id TEXT REFERENCES events(event_id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audio_events_label ON audio_events(label, timestamp);
 
 -- Enrolled faces (for matching)
 CREATE TABLE IF NOT EXISTS enrolled_faces (

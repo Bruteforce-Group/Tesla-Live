@@ -4,7 +4,7 @@ from datetime import datetime
 
 import numpy as np
 
-from .detector import BBox
+from .types import BBox
 
 try:
     from hailo_platform import HEF

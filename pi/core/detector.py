@@ -1,9 +1,19 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import ClassVar
+from typing import Iterable
 
 import cv2
 import numpy as np
+
+from .masking import MaskSmoother, MaskingConfig, apply_privacy_masks
+from .types import (
+    ALERT_CLASSES,
+    VEHICLE_CLASSES,
+    BBox,
+    Detection,
+    FaceDetection,
+    PlateDetection,
+)
 
 # Hailo imports - these will be available when HailoRT is installed
 try:
@@ -19,82 +29,24 @@ except ImportError:
     print("Warning: Hailo runtime not available, using mock detector")
 
 
-@dataclass
-class BBox:
-    x1: float
-    y1: float
-    x2: float
-    y2: float
-
-    @property
-    def width(self) -> float:
-        return self.x2 - self.x1
-
-    @property
-    def height(self) -> float:
-        return self.y2 - self.y1
-
-    @property
-    def center(self) -> tuple[float, float]:
-        return ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2)
-
-
-@dataclass
-class Detection:
-    class_name: str
-    class_id: int
-    confidence: float
-    bbox: BBox
-
-
-@dataclass
-class PlateDetection(Detection):
-    plate_crop: np.ndarray | None = None
-
-
-@dataclass
-class FaceDetection(Detection):
-    landmarks: np.ndarray | None = None
-    embedding: np.ndarray | None = None
-
-
 class HailoDetector:
     """Hailo-8L inference wrapper for object detection."""
-
-    YOLO_CLASSES: ClassVar[list[str]] = [
-        "person",
-        "bicycle",
-        "car",
-        "motorcycle",
-        "airplane",
-        "bus",
-        "train",
-        "truck",
-        "boat",
-        "traffic light",
-        "fire hydrant",
-        "stop sign",
-        "parking meter",
-        "bench",
-    ]
-
-    VEHICLE_CLASSES: ClassVar[set[str]] = {"car", "truck", "bus", "motorcycle"}
-    ALERT_CLASSES: ClassVar[set[str]] = {
-        "person",
-        "bicycle",
-        "car",
-        "truck",
-        "bus",
-        "motorcycle",
-        "stop sign",
-        "traffic light",
-    }
 
     def __init__(self, config):
         self.config = config
         self.device = None
         self.yolo_hef = None
         self.plate_hef = None
+        self.mask_config = MaskingConfig(
+            inflate_ratio=self.config.mask_inflate_ratio,
+            min_size=self.config.mask_min_size,
+            mask_type=self.config.mask_type,
+            blur_kernel=self.config.mask_blur_kernel,
+            mosaic_block=self.config.mask_mosaic_block_size,
+            persist_ms=self.config.mask_persist_ms,
+            smooth_alpha=self.config.mask_smooth_alpha,
+        )
+        self.mask_smoother = MaskSmoother(self.mask_config)
 
         if HAILO_AVAILABLE:
             self._init_hailo()
@@ -182,3 +134,22 @@ class HailoDetector:
         """Mock detection for testing without Hailo."""
         _ = frame
         return []
+
+    def mask_frame(
+        self,
+        frame: np.ndarray,
+        detections: Iterable[Detection],
+        categories_to_mask: Iterable[str] | None = None,
+    ) -> tuple[np.ndarray, list[dict]]:
+        """
+        Apply privacy masking using configured strategy.
+
+        Returns masked frame and mask metadata for downstream logging.
+        """
+        return apply_privacy_masks(
+            frame=frame,
+            detections=detections,
+            config=self.mask_config,
+            smoother=self.mask_smoother,
+            categories_to_mask=categories_to_mask,
+        )

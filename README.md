@@ -7,6 +7,7 @@ Raspberry Pi 5 + Hailo-8L dashcam pipeline for Tesla Model 3 with Cloudflare Wor
 - `cloudflare/` – Workers API, Durable Object dashboard hub, queues, workflows
 - `dashboard-web/` – optional React dashboard shell
 - `scripts/` – deployment helpers for Pi and Cloudflare
+- `docs/ai-camera-strategy-alignment.md` – how this project implements the provided object detection strategy (models, masking, audio, metadata, testing)
 
 ### Quick start
 - Pi: `cd pi && poetry install && poetry run pytest`

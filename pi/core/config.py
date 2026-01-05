@@ -33,6 +33,22 @@ class Settings(BaseSettings):
     plate_confidence_threshold: float = Field(default=0.7)
     face_confidence_threshold: float = Field(default=0.8)
     face_match_threshold: float = Field(default=0.6)
+    # Masking
+    mask_inflate_ratio: float = Field(default=0.4)  # 40% box inflation
+    mask_min_size: int = Field(default=32)
+    mask_type: str = Field(default="pixelate")  # or "blur"
+    mask_blur_kernel: int = Field(default=51)
+    mask_mosaic_block_size: int = Field(default=12)
+    mask_persist_ms: int = Field(default=500)
+    mask_smooth_alpha: float = Field(default=0.6)
+    # Audio
+    audio_enabled: bool = Field(default=False)
+    audio_sample_rate: int = Field(default=16000)
+    audio_window_seconds: float = Field(default=2.0)
+    audio_min_confidence: float = Field(default=0.6)
+    audio_labels: list[str] = Field(
+        default_factory=lambda: ["siren", "alarm", "horn", "glass_break", "bark"]
+    )
 
     # Upload
     upload_on_wifi_only: bool = Field(default=False)
