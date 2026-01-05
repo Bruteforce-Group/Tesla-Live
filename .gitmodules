@@ -1,0 +1,4 @@
+[submodule "cursor-rules"]
+	path = cursor-rules
+	url = https://github.com/Bruteforce-Group/cursor-rules.git
+	branch = main
