@@ -1,0 +1,38 @@
+name: Security Scans
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --path=. --redact
+
+      - name: Python dependency audit (pi)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip-audit -r pi/requirements.txt
+
+      - name: Node audit (cloudflare)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: cloudflare
+      - run: npm audit --audit-level=high
+        working-directory: cloudflare

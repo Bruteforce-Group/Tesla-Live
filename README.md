@@ -9,6 +9,7 @@ Raspberry Pi 5 + Hailo-8L dashcam pipeline for Tesla Model 3 with Cloudflare Wor
 - `scripts/` – deployment helpers for Pi and Cloudflare
 - `docs/ai-camera-strategy-alignment.md` – how this project implements the provided object detection strategy (models, masking, audio, metadata, testing)
 - `.githooks/` – local git hooks; pre-commit keeps `cursor-rules` submodule synced
+- `.github/workflows/security.yml` – CI secret and dependency scans (gitleaks, pip-audit, npm audit)
 
 ### Quick start
 - Pi: `cd pi && poetry install && poetry run pytest`
@@ -17,5 +18,6 @@ Raspberry Pi 5 + Hailo-8L dashcam pipeline for Tesla Model 3 with Cloudflare Wor
 ### Git hooks
 - To enforce keeping the `cursor-rules` submodule on the latest `main`, set hooks path once:  
   `bash scripts/install-git-hooks.sh`
+- CI also enforces the submodule pointer via `.github/workflows/cursor-rules-sync.yml`
 
 Set required env vars listed in the architecture docs before running.
