@@ -1,0 +1,58 @@
+# Managed by Bruteforce-Group/github-governance: created once when missing, then yours to edit.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/cloudflare"
+      - "/dashboard-web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Australia/Brisbane"
+    open-pull-requests-limit: 5
+    groups:
+      npm-version-updates:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+      npm-security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directories:
+      - "/pi"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Australia/Brisbane"
+    open-pull-requests-limit: 5
+    groups:
+      pip-version-updates:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+      pip-security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Australia/Brisbane"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions-version-updates:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+      github-actions-security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
