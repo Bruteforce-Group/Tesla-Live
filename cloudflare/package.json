@@ -16,10 +16,10 @@
     "hono": "^4.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "@cloudflare/workers-types": "^4.20241205.0",
-    "typescript": "^5.7.0",
-    "wrangler": "^3.95.0",
-    "vitest": "^2.1.0"
+    "@biomejs/biome": "^2.5.15",
+    "@cloudflare/workers-types": "^5.20261008.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.148.0",
+    "vitest": "^5.0.3"
   }
 }
